@@ -4,6 +4,7 @@ normTail <- function(m = 0, s = 1, L = NULL, U = NULL, M = NULL, df = 1000, curv
     if (is.null(xlim)[1]) {
         xlim <- m + c(-1, 1) * 3.5 * s
     }
+    xLab <- match.arg(xLab)
     temp <- diff(range(xlim))
     x <- seq(xlim[1] - temp/4, xlim[2] + temp/4, length.out = detail)
     y <- dt((x - m)/s, df)/s
@@ -121,7 +122,7 @@ FTail <- function(U = NULL, df_n = 100, df_d = 100, curveColor = 1, border = 1, 
 #' @export
 
 inference <- function(y, x = NULL, est = c("mean", "median", "proportion"), success = NULL, order = NULL, 
-    conflevel = 0.95, siglevel = 0.05, null = NULL, alternative = c("less", "greater", "twosided"), 
+    conflevel = 0.95, siglevel = 0.05, null = NULL, alternative = c("twosided", "less", "greater"), 
     type = c("ci", "ht"), method = c("theoretical", "simulation"), simdist = FALSE, nsim = 10000, 
     seed = NULL, sum_stats = TRUE, eda_plot = TRUE, inf_plot = TRUE, inf_lines = TRUE) {
     # y: variable 1, can be numerical or categorical x: variable 2, categorical (optional) est:
@@ -136,16 +137,30 @@ inference <- function(y, x = NULL, est = c("mean", "median", "proportion"), succ
     # load packages, if needed lmPerm package is no longer available if (!('lmPerm' %in%
     # names(installed.packages()[,'Package']))) {install.packages('lmPerm')}
     # suppressMessages(library(lmPerm, quietly = TRUE))
+
+    # added match.arg to arguments with multiple string options and defaults
+
+    est <- match.arg(est)
+    alternative <- match.arg(alternative)
+    type <- match.arg(type)
+    method <- match.arg(method)
+
+
+    # use require instead of automatically installing packages.  
+    # Not as "automatic", but requires users to be in charge of what is downloaded. 
     
-    if (!("openintro" %in% names(installed.packages()[, "Package"]))) {
-        install.packages("openintro")
-    }
-    suppressMessages(library(openintro, quietly = TRUE))
+    require("openintro")
+    require("BHH2")
     
-    if (!("BHH2" %in% names(installed.packages()[, "Package"]))) {
-        install.packages("BHH2")
-    }
-    suppressMessages(library(BHH2, quietly = TRUE))
+    # if (!("openintro" %in% names(installed.packages()[, "Package"]))) {
+    #     install.packages("openintro")
+    # }
+    # suppressMessages(library(openintro, quietly = TRUE))
+    # 
+    # if (!("BHH2" %in% names(installed.packages()[, "Package"]))) {
+    #     install.packages("BHH2")
+    # }
+    # suppressMessages(library(BHH2, quietly = TRUE))
     
     # names for plot labels
     y_name = deparse(substitute(y))
@@ -755,7 +770,8 @@ inference <- function(y, x = NULL, est = c("mean", "median", "proportion"), succ
                 # alternative = twosided
                 if (alternative == "twosided") {
                   cat(paste("p-value = ", smaller_tail * 2, "\n"))
-                  if (inf_lot == TRUE) {
+                # changed inf_lot to inf_plot
+                  if (inf_plot == TRUE) {
                     if (actual < null) {
                       normTail(L = teststat, U = -1 * teststat, axes = FALSE, col = COL[1, 2])
                       axis(1, at = c(-3, teststat, 0, -1 * teststat, 3), labels = c(NA, paste(round(actual, 
